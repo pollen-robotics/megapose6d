@@ -24,3 +24,4 @@ tmp/
 *tmp/
 local_data
 tests.sh
+data/*

@@ -4,22 +4,12 @@ import json
 import os
 from pathlib import Path
 from typing import List, Tuple, Union
-import time
-import pickle
 
 # Third Party
 import numpy as np
 from bokeh.io import export_png
 from bokeh.plotting import gridplot
 from PIL import Image
-from FramesViewer.viewer import Viewer
-import cv2
-from gen6d_pollen.utils.aruco_utils import ArucoUtils
-
-arucoUtils = ArucoUtils(8, 5, 0.053, 0.0253, cv2.aruco.DICT_4X4_50)
-
-from scipy.spatial.transform import Rotation as R
-
 
 # MegaPose
 from megapose.datasets.object_dataset import RigidObject, RigidObjectDataset
@@ -139,7 +129,10 @@ def run_inference(
 
     model_info = NAMED_MODELS[model_name]
 
-    observation = load_observation_tensor(example_dir, load_depth=True).cuda()
+    observation = load_observation_tensor(
+        example_dir, load_depth=model_info["requires_depth"]
+    ).cuda()
+    
     detections = load_detections(example_dir).cuda()
     object_dataset = make_object_dataset(example_dir)
 
@@ -154,124 +147,17 @@ def run_inference(
     save_predictions(example_dir, output)
     return
 
-
-def make_output_visualization(
-    example_dir: Path,
-) -> None:
-
-    rgb, _, camera_data = load_observation(example_dir, load_depth=False)
-    camera_data.TWC = Transform(np.eye(4))
-    object_datas = load_object_data(example_dir / "outputs" / "object_data.json")
-    object_dataset = make_object_dataset(example_dir)
-
-    renderer = Panda3dSceneRenderer(object_dataset)
-
-    camera_data, object_datas = convert_scene_observation_to_panda3d(camera_data, object_datas)
-    light_datas = [
-        Panda3dLightData(
-            light_type="ambient",
-            color=((1.0, 1.0, 1.0, 1)),
-        ),
-    ]
-    renderings = renderer.render_scene(
-        object_datas,
-        [camera_data],
-        light_datas,
-        render_depth=False,
-        render_binary_mask=False,
-        render_normals=False,
-        copy_arrays=True,
-    )[0]
-
-    plotter = BokehPlotter()
-
-    fig_rgb = plotter.plot_image(rgb)
-    fig_mesh_overlay = plotter.plot_overlay(rgb, renderings.rgb)
-    contour_overlay = make_contour_overlay(
-        rgb, renderings.rgb, dilate_iterations=1, color=(0, 255, 0)
-    )["img"]
-    fig_contour_overlay = plotter.plot_image(contour_overlay)
-    fig_all = gridplot([[fig_rgb, fig_contour_overlay, fig_mesh_overlay]], toolbar_location=None)
-    vis_dir = example_dir / "visualizations"
-    vis_dir.mkdir(exist_ok=True)
-    export_png(fig_mesh_overlay, filename=vis_dir / "mesh_overlay.png")
-    export_png(fig_contour_overlay, filename=vis_dir / "contour_overlay.png")
-    export_png(fig_all, filename=vis_dir / "all_results.png")
-    logger.info(f"Wrote visualizations to {vis_dir}.")
-    return
-
-
-def vis_pose(example_dir: Path):
-
-    board_x, board_y = arucoUtils.getBoardSize()
-    aruco_board_bounds = [
-        [0, 0, 0],
-        [board_x, 0, 0],
-        [board_x, board_y, 0],
-        [0, board_y, 0],
-    ]
-
-    T_world_camera = pickle.load(open(os.path.join(example_dir, "camera_pose.pckl"), "rb"))
-    quat, pos = json.load(open(os.path.join(example_dir, "outputs", "object_data.json"), "rb"))[0][
-        "TWO"
-    ]
-    im = cv2.imread(os.path.join(example_dir, "image_rgb.png"))
-    matrix = R.from_quat(quat).as_matrix()
-
-    T_camera_object = np.eye(4)
-    T_camera_object[:3, :3] = matrix
-    T_camera_object[:3, 3] = pos
-
-    T_world_object = T_world_camera @ T_camera_object
-
-    fv = Viewer()
-    fv.start()
-    fv.createPointsList("aruco_board", aruco_board_bounds, size=10, color=(0, 0, 1))
-
-    fv.pushFrame(T_world_camera, "camera")
-    fv.pushFrame(T_world_object, "object")
-    cv2.imshow("image", im)
-    while True:
-        cv2.waitKey(1)
-        time.sleep(0.01)
-
-
-# def make_mesh_visualization(RigidObject) -> List[Image]:
-#     return
-
-
-# def make_scene_visualization(CameraData, List[ObjectData]) -> List[Image]:
-#     return
-
-
-# def run_inference(example_dir, use_depth: bool = False):
-#     return
-
-
 if __name__ == "__main__":
-    set_logging_level("info")
     parser = argparse.ArgumentParser()
     parser.add_argument("example_name")
     parser.add_argument("--model", type=str, default="megapose-1.0-RGB-multi-hypothesis")
-    parser.add_argument("--vis-detections", action="store_true")
-    parser.add_argument("--run-inference", action="store_true")
-    parser.add_argument("--vis-outputs", action="store_true")
-    parser.add_argument("--vis-pose", action="store_true")
-
+    # parser.add_argument("--vis-detections", action="store_true")
+    # parser.add_argument("--run-inference", action="store_true")
+    # parser.add_argument("--vis-outputs", action="store_true")
     args = parser.parse_args()
 
     data_dir = os.getenv("MEGAPOSE_DATA_DIR")
     assert data_dir
     example_dir = Path(data_dir) / "examples" / args.example_name
 
-    if args.vis_detections:
-        make_detections_visualization(example_dir)
-
-    if args.run_inference:
-        run_inference(example_dir, args.model)
-
-    if args.vis_outputs:
-        make_output_visualization(example_dir)
-
-    if args.vis_pose:
-        vis_pose(example_dir)
+    run_inference(example_dir, args.model)
