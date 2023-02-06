@@ -183,17 +183,17 @@ while running:
 
     bbox = [im.shape[1] // 2 - size//2, im.shape[0] // 2 - size//2, size, size]
 
-    # if key == 13:
+    if key == 13:
 
-    observation = load_observation_tensor(camera_data, im).cuda()
-    detections = load_detection(bbox, label).cuda()
-    print("Running inference")
-    output, _ = pose_estimator.run_inference_pipeline(
-        observation, detections=detections, **model_info["inference_parameters"]
-    )
+        observation = load_observation_tensor(camera_data, im).cuda()
+        detections = load_detection(bbox, label).cuda()
+        print("Running inference")
+        output, _ = pose_estimator.run_inference_pipeline(
+            observation, detections=detections, **model_info["inference_parameters"]
+        )
 
-    viz = make_output_visualization(im, camera_data, object_dataset, output, detections)
-    cv2.imshow("viz", viz)
+        viz = make_output_visualization(im, camera_data, object_dataset, output, detections)
+        cv2.imshow("viz", viz)
 
     if key == ord("p"):
         size += 10
