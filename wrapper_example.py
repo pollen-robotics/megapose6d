@@ -4,7 +4,7 @@ from megapose.utils.megapose_wrapper import MegaposeWrapper
 import cv2
 from cv2 import aruco
 from FramesViewer.viewer import Viewer
-
+import time
 
 def draw_bboxes(im, bboxes):
     for entry in bboxes:
@@ -67,14 +67,22 @@ while True:
         fv.pushFrame(T_world_camera, "T_world_camera")
 
     if key == 13:
+        start_get_poses = time.time()
         poses = mpw.get_poses(im, bboxes)
+        end_get_poses = time.time()
+        start_get_visualization = time.time()
         vis = mpw.get_visualization()
+        end_get_visualization = time.time()
 
         if T_world_camera is not None:
             T_world_object = T_world_camera @ poses[0]
             fv.pushFrame(T_world_object, "T_world_object")
 
+        print("==========")
+        print("Time get_poses: ", end_get_poses - start_get_poses)
+        print("Time get_visualization: ", end_get_visualization - start_get_visualization)
         print(poses)
+        print("==========")
 
     if key == ord("p"):
         size += 10

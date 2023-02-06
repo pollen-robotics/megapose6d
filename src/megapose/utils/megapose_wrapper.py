@@ -35,7 +35,6 @@ class MegaposeWrapper:
         self._last_detections = None
 
         assert self._data_dir
-        print("done other")
 
     # resolution is (h, w)
     def set_camera_resolution(self, resolution):
@@ -47,7 +46,6 @@ class MegaposeWrapper:
     #  bboxes -> [{label: "apple", bbox: ...}, ...]
     # Format of bbox is [xtop, ytop, width, height]
     def get_poses(self, im: np.ndarray, bboxes: list):
-        print("Running inference ...")
 
         self._last_im = im
         observation = self.load_observation_tensor(self._camera_data, im).cuda()
@@ -60,9 +58,6 @@ class MegaposeWrapper:
         )
 
         poses = self._last_output.poses.cpu().numpy()
-        
-        print("Done !")
-        print("=======================")
 
         return poses
 
