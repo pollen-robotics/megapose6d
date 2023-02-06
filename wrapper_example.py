@@ -55,9 +55,9 @@ while True:
     if not mpw.is_camera_resolution_set():
         mpw.set_camera_resolution(im.shape[:2])
 
-    bbox1 = [im.shape[1] // 2 - size//2, im.shape[0] // 2 - size // 2, size, size]
+    bbox1 = [im.shape[1] // 2 - size // 2, im.shape[0] // 2 - size // 2, size, size]
     # bbox2 = [im.shape[1] // 2 , im.shape[0] // 2 - size // 2, size, size]
-    bboxes = [{"label": "mug_plastoc", "bbox": bbox1}]#, {"label": "mug_plastoc", "bbox": bbox2}]
+    bboxes = [{"label": "mug_plastoc", "bbox": bbox1}]  # , {"label": "mug_plastoc", "bbox": bbox2}]
 
     T_world_camera = arucoUtils.get_camera_pose(
         im, cam.get_camera_matrix(), cam.get_distortion_coefficients()
