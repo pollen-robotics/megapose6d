@@ -6,6 +6,7 @@ from cv2 import aruco
 from FramesViewer.viewer import Viewer
 import time
 
+
 def draw_bboxes(im, bboxes):
     for entry in bboxes:
         bbox = entry["bbox"]
@@ -18,11 +19,13 @@ def draw_bboxes(im, bboxes):
     return im
 
 
+item_name = "mug_plastoc"
+
 # This is an example, use any camera you want
 cam = RealsenseWrapper("/tmp/aze/calibration.pckl")
 mpw = MegaposeWrapper(
     "/tmp/aze/calibration.pckl",
-    "/home/antoine/Pollen/INCIA/megapose6d/data/examples/mug_plastoc",
+    "/home/antoine/Pollen/INCIA/megapose6d/data/examples/" + item_name,
     "megapose-1.0-RGB-multi-hypothesis",
 )
 
@@ -57,7 +60,7 @@ while True:
 
     bbox1 = [im.shape[1] // 2 - size // 2, im.shape[0] // 2 - size // 2, size, size]
     # bbox2 = [im.shape[1] // 2 , im.shape[0] // 2 - size // 2, size, size]
-    bboxes = [{"label": "mug_plastoc", "bbox": bbox1}]  # , {"label": "mug_plastoc", "bbox": bbox2}]
+    bboxes = [{"label": item_name, "bbox": bbox1}]  # , {"label": "mug_plastoc", "bbox": bbox2}]
 
     T_world_camera = arucoUtils.get_camera_pose(
         im, cam.get_camera_matrix(), cam.get_distortion_coefficients()
