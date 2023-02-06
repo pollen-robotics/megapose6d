@@ -44,15 +44,14 @@ class MegaposeWrapper:
     def is_camera_resolution_set(self):
         return self._camera_data.get_resolution() is not None
 
-    # Format of bbox parameter is [xtop, ytop, width, height]
-    # TODO bbox should be bboxes -> [{label: "apple", bbox: ...}, ...]
-    # The original code is made to handle multiple detections
-    def get_pose(self, im: np.ndarray, bbox: list):
+    #  bboxes -> [{label: "apple", bbox: ...}, ...]
+    # Format of bbox is [xtop, ytop, width, height]
+    def get_poses(self, im: np.ndarray, bboxes: list):
         print("Running inference ...")
 
         self._last_im = im
         observation = self.load_observation_tensor(self._camera_data, im).cuda()
-        self._last_detections = self.load_detection(bbox, self._label).cuda()
+        self._last_detections = self.load_detections(bboxes).cuda()
 
         self._last_output, _ = self._pose_estimator.run_inference_pipeline(
             observation,
@@ -113,10 +112,17 @@ class MegaposeWrapper:
         return observation
 
     @staticmethod
-    def load_detection(bbox, label):
-        _bbox = [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]]
+    def load_detections(bboxes):
 
-        input_object_data = [{"label": label, "bbox_modal": _bbox}]
+        input_object_data = []
+        for entry in bboxes:
+            bbox = entry["bbox"]
+            # Convert from [xtop, ytop, width, height] to [x1, y1, x2, y2]
+            _bbox = [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]]
+            label = entry["label"]
+
+            input_object_data.append({"label": label, "bbox_modal": _bbox})
+
         input_object_data = [ObjectData.from_json(d) for d in input_object_data]
         detections = make_detections_from_object_data(input_object_data).cuda()
 
