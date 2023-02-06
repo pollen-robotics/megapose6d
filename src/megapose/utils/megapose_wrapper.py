@@ -45,16 +45,17 @@ class MegaposeWrapper:
 
     #  bboxes -> [{label: "apple", bbox: ...}, ...]
     # Format of bbox is [xtop, ytop, width, height]
-    def get_poses(self, im: np.ndarray, bboxes: list):
+    def get_poses(self, im: np.ndarray, bboxes: list, run_full_pipe=True):
 
         self._last_im = im
         observation = self.load_observation_tensor(self._camera_data, im).cuda()
         self._last_detections = self.load_detections(bboxes).cuda()
 
+        coarse_estimates = None if run_full_pipe else self._last_output
         self._last_output, _ = self._pose_estimator.run_inference_pipeline(
             observation,
             detections=self._last_detections,
-            **self._model_info["inference_parameters"],
+            **self._model_info["inference_parameters"], coarse_estimates=coarse_estimates
         )
 
         poses = self._last_output.poses.cpu().numpy()

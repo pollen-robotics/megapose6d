@@ -38,7 +38,7 @@ aruco_board_bounds = [
     [0, board_y, 0],
 ]
 
-
+run_inference = False
 fv = Viewer()
 fv.start()
 
@@ -70,8 +70,11 @@ while True:
         fv.pushFrame(T_world_camera, "T_world_camera")
 
     if key == 13:
+        run_inference = not run_inference
+
+    if run_inference:
         start_get_poses = time.time()
-        poses = mpw.get_poses(im, bboxes)
+        poses = mpw.get_poses(im, bboxes, run_full_pipe=False)
         end_get_poses = time.time()
         start_get_visualization = time.time()
         vis = mpw.get_visualization()
