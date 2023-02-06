@@ -1,3 +1,5 @@
+# Pollen Robotics's fork of megapose6d
+
 # MegaPose
 This repository contains code, models and dataset for our MegaPose paper. 
 
