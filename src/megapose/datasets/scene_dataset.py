@@ -31,6 +31,7 @@ import numpy as np
 import pandas as pd
 import torch
 import webdataset as wds
+import pickle
 
 # MegaPose
 import megapose.utils.tensor_collection as tc
@@ -144,6 +145,13 @@ class CameraData:
                 d[k] = getattr(self, k)
         return json.dumps(d)
 
+    # Resolution is (h, w)
+    def set_resolution(self, resolution: list):
+        self.resolution = resolution
+
+    def get_resolution(self):
+        return self.resolution
+
     @staticmethod
     def from_json(data_str: str) -> "CameraData":
         d: DataJsonType = json.loads(data_str)
@@ -171,6 +179,15 @@ class CameraData:
             assert isinstance(h, int)
             assert isinstance(w, int)
             data.resolution = (h, w)
+        return data
+
+    @staticmethod
+    def from_pickle(data_str: str) -> "CameraData":
+        camera_matrix, distortion, rvecs, tvecs = pickle.load(open(data_str, "rb"))
+
+        data = CameraData()
+        data.K = camera_matrix
+
         return data
 
 
