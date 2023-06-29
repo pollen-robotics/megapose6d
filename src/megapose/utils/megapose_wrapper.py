@@ -40,13 +40,15 @@ class MegaposeWrapper:
     def set_camera_resolution(self, resolution):
         self._camera_data.set_resolution(resolution)
 
+    def set_camera_matrix(self, K):
+        self._camera_data.K = K
+
     def is_camera_resolution_set(self):
         return self._camera_data.get_resolution() is not None
 
     #  bboxes -> [{label: "apple", bbox: ...}, ...]
     # Format of bbox is [xtop, ytop, width, height]
     def get_poses(self, im: np.ndarray, bboxes: list, run_full_pipe=True):
-
         self._last_im = im
         observation = self.load_observation_tensor(self._camera_data, im).cuda()
         self._last_detections = self.load_detections(bboxes).cuda()
@@ -55,7 +57,8 @@ class MegaposeWrapper:
         self._last_output, _ = self._pose_estimator.run_inference_pipeline(
             observation,
             detections=self._last_detections,
-            **self._model_info["inference_parameters"], coarse_estimates=coarse_estimates
+            **self._model_info["inference_parameters"],
+            coarse_estimates=coarse_estimates,
         )
 
         poses = self._last_output.poses.cpu().numpy()
@@ -109,7 +112,6 @@ class MegaposeWrapper:
 
     @staticmethod
     def load_detections(bboxes):
-
         input_object_data = []
         for entry in bboxes:
             bbox = entry["bbox"]
@@ -126,7 +128,6 @@ class MegaposeWrapper:
 
     @staticmethod
     def make_output_visualization(rgb, camera_data, object_dataset, pose_estimates, detections):
-
         labels = pose_estimates.infos["label"]
         poses = pose_estimates.poses.cpu().numpy()
         object_datas = [

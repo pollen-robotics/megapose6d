@@ -1,10 +1,15 @@
-from gen6d_pollen.utils.realsense_wrapper import RealsenseWrapper
-from gen6d_pollen.utils.aruco_utils import ArucoUtils
-from megapose.utils.megapose_wrapper import MegaposeWrapper
+# Standard Library
+import time
+
+# Third Party
 import cv2
 from cv2 import aruco
 from FramesViewer.viewer import Viewer
-import time
+from gen6d_pollen.utils.aruco_utils import ArucoUtils
+from gen6d_pollen.utils.realsense_wrapper import RealsenseWrapper
+
+# MegaPose
+from megapose.utils.megapose_wrapper import MegaposeWrapper
 
 
 def draw_bboxes(im, bboxes):
@@ -19,7 +24,7 @@ def draw_bboxes(im, bboxes):
     return im
 
 
-item_name = "mug_plastoc"
+item_name = "cylindre_onshape"
 
 # This is an example, use any camera you want
 cam = RealsenseWrapper("/tmp/aze/calibration.pckl")
